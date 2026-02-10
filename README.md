@@ -165,6 +165,12 @@ src/
 
 All interfaces convert input to a `Prompt` object and call `engine.execute(prompt)`. The engine resolves the provider, manages sessions, and returns a `PromptResult`.
 
+## Contributors
+
+- [Claude](https://github.com/claude)
+- [sirkhet-dev](https://github.com/sirkhet-dev)
+- [Codex](https://github.com/codex)
+
 ## License
 
 MIT
