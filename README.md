@@ -14,7 +14,7 @@ Telegram / REST API / CLI  -->  Engine  -->  LLM Providers  -->  Markdown Vault
 
 ## Features
 
-- **Multi-LLM**: Claude CLI, Gemini CLI, Codex CLI, Claude API, OpenAI API, Gemini API
+- **Multi-LLM**: Claude CLI, Gemini CLI, Codex CLI, Claude API, OpenAI API, Gemini API, OpenRouter (100+ models)
 - **3 Interfaces**: Telegram bot, REST API, CLI REPL - all share the same engine
 - **Knowledge Vault**: Markdown notes with YAML frontmatter in 3 categories (brainstorm/active/archive)
 - **Full-Text Search**: In-memory TF-IDF search across all notes
@@ -25,7 +25,7 @@ Telegram / REST API / CLI  -->  Engine  -->  LLM Providers  -->  Markdown Vault
 ## Quick Start
 
 ```bash
-git clone https://github.com/yourusername/aivault.git
+git clone https://github.com/sirkhet-dev/aivault.git
 cd aivault
 npm install
 cp .env.example .env
@@ -70,10 +70,25 @@ See [`.env.example`](.env.example) for all options. Key settings:
 | `gemini-api` | HTTP API | `GOOGLE_API_KEY` |
 | `openrouter-api` | HTTP API | `OPENROUTER_API_KEY` (100+ models) |
 
-Switch providers at runtime:
-- Telegram: `/provider openai-api`
+### OpenRouter
+
+[OpenRouter](https://openrouter.ai) gives you access to 100+ models (Claude, GPT, Gemini, Llama, Mistral, DeepSeek, etc.) through a single API key. Set the model via `OPENROUTER_MODEL`:
+
+```env
+OPENROUTER_API_KEY=sk-or-...
+OPENROUTER_MODEL=anthropic/claude-sonnet-4    # default
+# OPENROUTER_MODEL=openai/gpt-4o
+# OPENROUTER_MODEL=google/gemini-2.0-flash-001
+# OPENROUTER_MODEL=meta-llama/llama-3.1-405b-instruct
+```
+
+Browse all available models at [openrouter.ai/models](https://openrouter.ai/models).
+
+### Switch providers at runtime
+
+- Telegram: `/provider openrouter-api`
 - CLI: `/provider claude-api`
-- API: `PUT /api/v1/provider {"provider": "gemini-api"}`
+- API: `PUT /api/v1/provider {"provider": "openai-api"}`
 
 ## REST API
 
@@ -141,7 +156,7 @@ Content here...
 ```
 src/
   core/        Engine, session management, queue
-  providers/   LLM provider implementations (6 providers)
+  providers/   LLM provider implementations (7 providers)
   interfaces/  Telegram, REST API, CLI
   vault/       Note CRUD, search, templates
   synthesis/   Auto-digest generation
