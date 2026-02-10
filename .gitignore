@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+data/
+vault/brainstorm/*
+vault/active/*
+vault/archive/*
+!vault/brainstorm/.gitkeep
+!vault/active/.gitkeep
+!vault/archive/.gitkeep
+.DS_Store

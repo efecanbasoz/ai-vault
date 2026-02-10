@@ -1,0 +1,51 @@
+{
+  "name": "aivault",
+  "version": "0.1.0",
+  "description": "AI-powered knowledge vault with multi-LLM support, Telegram bot, REST API, and CLI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "aivault": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "cli": "tsx src/index.ts --cli-only",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "vault",
+    "knowledge-base",
+    "telegram-bot",
+    "multi-llm",
+    "claude",
+    "openai",
+    "gemini",
+    "second-brain",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/node-server": "^1.19.9",
+    "dotenv": "^16.4.7",
+    "grammy": "^1.39.3",
+    "gray-matter": "^4.0.3",
+    "hono": "^4.7.0",
+    "node-cron": "^3.0.3",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
