@@ -31,6 +31,8 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   OPENAI_API_KEY: z.string().optional().default(''),
   GOOGLE_API_KEY: z.string().optional().default(''),
+  OPENROUTER_API_KEY: z.string().optional().default(''),
+  OPENROUTER_MODEL: z.string().default('anthropic/claude-sonnet-4'),
 
   // Vault
   VAULT_PATH: z.string().default('./vault'),
