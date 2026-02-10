@@ -68,6 +68,7 @@ See [`.env.example`](.env.example) for all options. Key settings:
 | `claude-api` | HTTP API | `ANTHROPIC_API_KEY` |
 | `openai-api` | HTTP API | `OPENAI_API_KEY` |
 | `gemini-api` | HTTP API | `GOOGLE_API_KEY` |
+| `openrouter-api` | HTTP API | `OPENROUTER_API_KEY` (100+ models) |
 
 Switch providers at runtime:
 - Telegram: `/provider openai-api`

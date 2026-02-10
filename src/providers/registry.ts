@@ -59,6 +59,11 @@ export async function initProviders(): Promise<void> {
     registerProvider(new GeminiAPIProvider());
   } catch { /* not yet implemented */ }
 
+  try {
+    const { OpenRouterAPIProvider } = await import('./openrouter-api.js');
+    registerProvider(new OpenRouterAPIProvider());
+  } catch { /* not yet implemented */ }
+
   // Log available providers
   const available: string[] = [];
   for (const p of providers.values()) {
