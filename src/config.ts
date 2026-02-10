@@ -26,6 +26,7 @@ const envSchema = z.object({
   // Providers
   DEFAULT_PROVIDER: z.string().default('claude-cli'),
   CLAUDE_BIN: z.string().default('claude'),
+  CLAUDE_SKIP_PERMISSIONS: z.coerce.boolean().default(false),
   GEMINI_BIN: z.string().default('gemini'),
   CODEX_BIN: z.string().default('codex'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),

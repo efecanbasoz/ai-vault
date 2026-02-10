@@ -7,21 +7,26 @@ export class CodexCLIProvider implements LLMProvider {
   readonly id = 'codex-cli';
   readonly name = 'Codex (CLI)';
   readonly mode = 'cli' as const;
+  private availabilityCheck: Promise<boolean> | null = null;
 
   supportsResume(): boolean {
     return false;
   }
 
   async isAvailable(): Promise<boolean> {
-    try {
-      const child = spawn(config.CODEX_BIN, ['--version'], { timeout: 5000 });
-      return new Promise((resolve) => {
-        child.on('close', (code) => resolve(code === 0));
-        child.on('error', () => resolve(false));
+    if (!this.availabilityCheck) {
+      this.availabilityCheck = new Promise((resolve) => {
+        try {
+          const child = spawn(config.CODEX_BIN, ['--version'], { timeout: 5000 });
+          child.on('close', (code) => resolve(code === 0));
+          child.on('error', () => resolve(false));
+        } catch {
+          resolve(false);
+        }
       });
-    } catch {
-      return false;
     }
+
+    return this.availabilityCheck;
   }
 
   run(prompt: string, workingDir: string, _sessionId: string | null, systemPrompt: string): LLMProviderHandle {

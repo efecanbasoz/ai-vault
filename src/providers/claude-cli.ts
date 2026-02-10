@@ -7,25 +7,33 @@ export class ClaudeCLIProvider implements LLMProvider {
   readonly id = 'claude-cli';
   readonly name = 'Claude Code (CLI)';
   readonly mode = 'cli' as const;
+  private availabilityCheck: Promise<boolean> | null = null;
 
   supportsResume(): boolean {
     return true;
   }
 
   async isAvailable(): Promise<boolean> {
-    try {
-      const child = spawn(config.CLAUDE_BIN, ['--version'], { timeout: 5000 });
-      return new Promise((resolve) => {
-        child.on('close', (code) => resolve(code === 0));
-        child.on('error', () => resolve(false));
+    if (!this.availabilityCheck) {
+      this.availabilityCheck = new Promise((resolve) => {
+        try {
+          const child = spawn(config.CLAUDE_BIN, ['--version'], { timeout: 5000 });
+          child.on('close', (code) => resolve(code === 0));
+          child.on('error', () => resolve(false));
+        } catch {
+          resolve(false);
+        }
       });
-    } catch {
-      return false;
     }
+
+    return this.availabilityCheck;
   }
 
   run(prompt: string, workingDir: string, sessionId: string | null, systemPrompt: string): LLMProviderHandle {
-    const args = ['-p', prompt, '--output-format', 'json', '--dangerously-skip-permissions'];
+    const args = ['-p', prompt, '--output-format', 'json'];
+    if (config.CLAUDE_SKIP_PERMISSIONS) {
+      args.push('--dangerously-skip-permissions');
+    }
     if (sessionId) {
       args.push('--resume', sessionId);
     }
