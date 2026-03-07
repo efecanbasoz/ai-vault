@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { config } from '../config.js';
 import type { UserId } from '../types.js';
 
@@ -19,7 +20,10 @@ export function resolveUserIdFromCli(): UserId {
 
 export function validateApiKey(providedKey: string): boolean {
   if (!config.API_KEY) return true; // No key configured = open access
-  return providedKey === config.API_KEY;
+  const a = Buffer.from(providedKey);
+  const b = Buffer.from(config.API_KEY);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 }
 
 export function validateTelegramUser(telegramId: number): boolean {

@@ -20,7 +20,7 @@ export class GeminiAPIProvider implements LLMProvider {
 
     const promise = (async (): Promise<LLMResult> => {
       const model = 'gemini-2.0-flash';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.GOOGLE_API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
       const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
       if (systemPrompt) {
@@ -31,7 +31,10 @@ export class GeminiAPIProvider implements LLMProvider {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': config.GOOGLE_API_KEY,
+        },
         body: JSON.stringify({
           contents,
           generationConfig: { maxOutputTokens: 8192 },

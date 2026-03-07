@@ -1,4 +1,5 @@
 import type { Context, Next } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { config } from '../../config.js';
 import { logger } from '../../logger.js';
 import { validateApiKey, resolveUserIdFromApiKey } from '../../users/auth.js';
@@ -10,6 +11,16 @@ interface RateLimitState {
 
 const rateLimitStore = new Map<string, RateLimitState>();
 
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, state] of rateLimitStore) {
+    if (now >= state.resetAt) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, CLEANUP_INTERVAL_MS).unref();
+
 function getClientIp(c: Context): string {
   const forwarded = c.req.header('x-forwarded-for');
   if (forwarded) {
@@ -18,21 +29,10 @@ function getClientIp(c: Context): string {
   return c.req.header('x-real-ip') ?? 'unknown';
 }
 
-export async function apiBodySizeMiddleware(c: Context, next: Next): Promise<Response | void> {
-  if (!['POST', 'PUT', 'PATCH'].includes(c.req.method)) {
-    return next();
-  }
-
-  const len = c.req.header('content-length');
-  if (len) {
-    const contentLength = Number(len);
-    if (Number.isFinite(contentLength) && contentLength > config.API_MAX_BODY_BYTES) {
-      return c.json({ error: `Payload too large. Max ${config.API_MAX_BODY_BYTES} bytes.` }, 413);
-    }
-  }
-
-  return next();
-}
+export const apiBodySizeMiddleware = bodyLimit({
+  maxSize: config.API_MAX_BODY_BYTES,
+  onError: (c) => c.json({ error: `Payload too large. Max ${config.API_MAX_BODY_BYTES} bytes.` }, 413),
+});
 
 export async function apiRateLimitMiddleware(c: Context, next: Next): Promise<Response | void> {
   const key = `${getClientIp(c)}:${c.req.path}`;

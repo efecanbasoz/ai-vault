@@ -84,7 +84,7 @@ export async function execute(prompt: Prompt): Promise<PromptResult> {
     logger.error({ userId: prompt.userId, provider: provider.id, err: errorMessage }, 'Prompt failed');
 
     return {
-      text: `Error: ${errorMessage}`,
+      text: 'An error occurred while processing your request. Please try again.',
       sessionId: session.sessionId,
       providerId: provider.id,
       costUsd: null,
