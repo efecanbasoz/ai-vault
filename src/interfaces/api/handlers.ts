@@ -97,7 +97,15 @@ export async function sessionResetHandler(c: Context): Promise<Response> {
 // GET /api/v1/vault/notes
 export async function listNotesHandler(c: Context): Promise<Response> {
   const userId = getUserId(c);
-  const category = c.req.query('category') as VaultCategory | undefined;
+  const rawCategory = c.req.query('category');
+  let category: VaultCategory | undefined;
+  if (rawCategory !== undefined) {
+    const parsed = categorySchema.safeParse(rawCategory);
+    if (!parsed.success) {
+      return c.json({ error: 'Invalid category. Must be: brainstorm, active, or archive' }, 400);
+    }
+    category = parsed.data;
+  }
   const notes = await vault.listNotes(userId, category);
   return c.json({ notes });
 }
@@ -229,7 +237,6 @@ export async function statusHandler(c: Context): Promise<Response> {
   const userId = getUserId(c);
   const session = getSession(userId, config.DEFAULT_PROVIDER);
   return c.json({
-    userId,
     provider: session.providerId,
     sessionId: session.sessionId ? session.sessionId.slice(0, 12) + '...' : null,
     busy: session.busy,

@@ -31,7 +31,7 @@ export class ClaudeCLIProvider implements LLMProvider {
 
   run(prompt: string, workingDir: string, sessionId: string | null, systemPrompt: string): LLMProviderHandle {
     const args = ['-p', prompt, '--output-format', 'json'];
-    if (config.CLAUDE_SKIP_PERMISSIONS) {
+    if (config.CLAUDE_SKIP_PERMISSIONS && config.SINGLE_USER_MODE && config.CLI_ENABLED) {
       args.push('--dangerously-skip-permissions');
     }
     if (sessionId) {
@@ -41,9 +41,25 @@ export class ClaudeCLIProvider implements LLMProvider {
       args.push('--system-prompt', systemPrompt);
     }
 
+    const safeEnv: Record<string, string | undefined> = {
+      PATH: process.env.PATH,
+      HOME: process.env.HOME,
+      USER: process.env.USER,
+      SHELL: process.env.SHELL,
+      TERM: process.env.TERM,
+      NODE_ENV: process.env.NODE_ENV,
+      LANG: process.env.LANG,
+    };
+    // Pass through CLAUDE_* and ANTHROPIC_API_KEY for Claude CLI
+    for (const key of Object.keys(process.env)) {
+      if (key.startsWith('CLAUDE_') || key === 'ANTHROPIC_API_KEY') {
+        safeEnv[key] = process.env[key];
+      }
+    }
+
     const child = spawn(config.CLAUDE_BIN, args, {
       cwd: workingDir,
-      env: { ...process.env },
+      env: safeEnv,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

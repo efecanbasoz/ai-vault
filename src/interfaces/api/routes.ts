@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { secureHeaders } from 'hono/secure-headers';
 import { apiAuthMiddleware, apiBodySizeMiddleware, apiRateLimitMiddleware } from './middleware.js';
 import {
   chatHandler,
@@ -19,7 +20,8 @@ import {
 export function createApiRoutes(): Hono {
   const api = new Hono();
 
-  // Auth middleware for all API routes
+  // Security & auth middleware for all API routes
+  api.use('*', secureHeaders());
   api.use('*', apiRateLimitMiddleware);
   api.use('*', apiBodySizeMiddleware);
   api.use('*', apiAuthMiddleware);

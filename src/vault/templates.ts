@@ -1,12 +1,19 @@
 import type { VaultCategory } from '../types.js';
 import type { NoteMetadata } from './types.js';
 
+function yamlEscape(value: string): string {
+  if (/[\\":\n\r\t\x00-\x1f]/.test(value)) {
+    return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
+  }
+  return '"' + value + '"';
+}
+
 export function generateFrontmatter(metadata: NoteMetadata): string {
   const lines = [
     '---',
-    `title: "${metadata.title}"`,
+    `title: ${yamlEscape(metadata.title)}`,
     `category: ${metadata.category}`,
-    `tags: [${metadata.tags.map((t) => `"${t}"`).join(', ')}]`,
+    `tags: [${metadata.tags.map((t) => yamlEscape(t)).join(', ')}]`,
     `created: ${metadata.created}`,
     `updated: ${metadata.updated}`,
     '---',
