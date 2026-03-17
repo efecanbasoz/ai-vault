@@ -22,8 +22,8 @@ export function createApiRoutes(): Hono {
 
   // Security & auth middleware for all API routes
   api.use('*', secureHeaders());
-  api.use('*', apiRateLimitMiddleware);
   api.use('*', apiBodySizeMiddleware);
+  api.use('*', apiRateLimitMiddleware);
   api.use('*', apiAuthMiddleware);
 
   // Chat

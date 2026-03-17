@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import type { LLMProvider, LLMProviderHandle, LLMResult } from './types.js';
+import { createSafeCliEnv } from './safe-env.js';
 
 export class GeminiCLIProvider implements LLMProvider {
   readonly id = 'gemini-cli';
@@ -33,7 +34,10 @@ export class GeminiCLIProvider implements LLMProvider {
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n---\n\n${prompt}` : prompt;
     const child = spawn(config.GEMINI_BIN, ['-p', fullPrompt], {
       cwd: workingDir,
-      env: { ...process.env },
+      env: createSafeCliEnv({
+        exactKeys: ['GOOGLE_API_KEY'],
+        prefixKeys: ['GEMINI_'],
+      }),
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

@@ -3,6 +3,7 @@ import { bodyLimit } from 'hono/body-limit';
 import { config } from '../../config.js';
 import { logger } from '../../logger.js';
 import { validateApiKey, resolveUserIdFromApiKey } from '../../users/auth.js';
+import { buildRateLimitKey, resolveRateLimitUserId } from './request-identity.js';
 
 interface RateLimitState {
   count: number;
@@ -21,21 +22,24 @@ setInterval(() => {
   }
 }, CLEANUP_INTERVAL_MS).unref();
 
-function getClientIp(c: Context): string {
-  const forwarded = c.req.header('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0]?.trim() || 'unknown';
-  }
-  return c.req.header('x-real-ip') ?? 'unknown';
-}
-
 export const apiBodySizeMiddleware = bodyLimit({
   maxSize: config.API_MAX_BODY_BYTES,
   onError: (c) => c.json({ error: `Payload too large. Max ${config.API_MAX_BODY_BYTES} bytes.` }, 413),
 });
 
 export async function apiRateLimitMiddleware(c: Context, next: Next): Promise<Response | void> {
-  const key = `${getClientIp(c)}:${c.req.path}`;
+  const userId = c.get('userId') ?? resolveRateLimitUserId({
+    authorizationHeader: c.req.header('Authorization'),
+    apiKeyConfigured: Boolean(config.API_KEY),
+    validateApiKey,
+    resolveUserIdFromApiKey,
+  });
+  const key = buildRateLimitKey({
+    headers: c.req.raw.headers,
+    path: c.req.path,
+    userId,
+    trustProxyHeaders: config.API_TRUST_PROXY_HEADERS,
+  });
   const now = Date.now();
   const state = rateLimitStore.get(key);
 
