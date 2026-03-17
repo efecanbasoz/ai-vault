@@ -21,6 +21,7 @@ const envSchema = z.object({
   API_MAX_BODY_BYTES: z.coerce.number().int().positive().default(1_048_576),
   API_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+  API_TRUST_PROXY_HEADERS: z.coerce.boolean().default(false),
   CLI_ENABLED: z.coerce.boolean().default(true),
 
   // Auth

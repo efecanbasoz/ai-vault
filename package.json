@@ -12,7 +12,8 @@
     "cli": "tsx src/index.ts --cli-only",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/users/auth.test.ts src/interfaces/api/request-identity.test.ts src/providers/safe-env.test.ts"
   },
   "keywords": [
     "ai",
