@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import type { LLMProvider, LLMProviderHandle, LLMResult } from './types.js';
+import { createSafeCliEnv } from './safe-env.js';
 
 export class ClaudeCLIProvider implements LLMProvider {
   readonly id = 'claude-cli';
@@ -41,21 +42,10 @@ export class ClaudeCLIProvider implements LLMProvider {
       args.push('--system-prompt', systemPrompt);
     }
 
-    const safeEnv: Record<string, string | undefined> = {
-      PATH: process.env.PATH,
-      HOME: process.env.HOME,
-      USER: process.env.USER,
-      SHELL: process.env.SHELL,
-      TERM: process.env.TERM,
-      NODE_ENV: process.env.NODE_ENV,
-      LANG: process.env.LANG,
-    };
-    // Pass through CLAUDE_* and ANTHROPIC_API_KEY for Claude CLI
-    for (const key of Object.keys(process.env)) {
-      if (key.startsWith('CLAUDE_') || key === 'ANTHROPIC_API_KEY') {
-        safeEnv[key] = process.env[key];
-      }
-    }
+    const safeEnv = createSafeCliEnv({
+      exactKeys: ['ANTHROPIC_API_KEY'],
+      prefixKeys: ['CLAUDE_'],
+    });
 
     const child = spawn(config.CLAUDE_BIN, args, {
       cwd: workingDir,

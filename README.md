@@ -61,7 +61,7 @@ npm run build      # Compile TypeScript
 - API access is blocked unless `API_KEY` is set or `API_ALLOW_ANONYMOUS=true`
 - Telegram access is blocked unless `TELEGRAM_ALLOWED_USERS` is configured or `TELEGRAM_ALLOW_PUBLIC=true`
 - Vault note paths are constrained to `brainstorm|active|archive` and `.md` filenames
-- API enforces request body size limits and in-memory per-IP+path rate limiting
+- API enforces request body size limits and in-memory identity-based rate limiting
 
 ## Configuration
 
@@ -75,8 +75,9 @@ See [`.env.example`](.env.example) for all options. Key settings:
 | `API_ENABLED` | Enable REST API | `true` |
 | `API_ALLOW_ANONYMOUS` | Allow API access without `API_KEY` | `false` |
 | `API_MAX_BODY_BYTES` | Maximum JSON body size accepted by API | `1048576` |
-| `API_RATE_LIMIT_MAX` | Max requests per window per IP+path | `60` |
+| `API_RATE_LIMIT_MAX` | Max requests per window per identity+path | `60` |
 | `API_RATE_LIMIT_WINDOW_MS` | Rate-limit window size in milliseconds | `60000` |
+| `API_TRUST_PROXY_HEADERS` | Trust `x-forwarded-for` / `x-real-ip` for anonymous rate-limit keys | `false` |
 | `CLI_ENABLED` | Enable CLI REPL | `true` |
 | `SINGLE_USER_MODE` | Skip auth, use root vault | `false` |
 
