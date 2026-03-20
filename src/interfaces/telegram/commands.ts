@@ -3,10 +3,10 @@ import { config } from '../../config.js';
 import { getSession, resetSession, setProvider } from '../../core/session.js';
 import { cancelCurrent } from '../../core/queue.js';
 import { listProviders, getProvider } from '../../providers/registry.js';
+import { resolveUserIdFromTelegram } from '../../users/auth.js';
 
 function resolveUserId(ctx: Context): string {
-  if (config.SINGLE_USER_MODE) return 'cli_local';
-  return `telegram_${ctx.from?.id}`;
+  return resolveUserIdFromTelegram(ctx.from?.id ?? 0);
 }
 
 function escapeHtml(text: string): string {

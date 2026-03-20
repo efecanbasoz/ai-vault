@@ -3,19 +3,14 @@ import { config } from '../../config.js';
 import { logger } from '../../logger.js';
 import { execute } from '../../core/engine.js';
 import { getSession } from '../../core/session.js';
+import { resolveUserIdFromTelegram } from '../../users/auth.js';
 import { formatForTelegram, splitMessage } from './formatter.js';
-
-function resolveUserId(ctx: Context): string {
-  const telegramId = ctx.from?.id;
-  if (config.SINGLE_USER_MODE) return 'cli_local';
-  return `telegram_${telegramId}`;
-}
 
 export async function handleMessage(ctx: Context): Promise<void> {
   const text = ctx.message?.text;
   if (!text) return;
 
-  const userId = resolveUserId(ctx);
+  const userId = resolveUserIdFromTelegram(ctx.from?.id ?? 0);
   const session = getSession(userId, config.DEFAULT_PROVIDER);
 
   if (session.busy) {

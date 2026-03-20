@@ -11,6 +11,7 @@ interface RateLimitState {
 }
 
 const rateLimitStore = new Map<string, RateLimitState>();
+const MAX_RATE_LIMIT_ENTRIES = 50_000;
 
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 setInterval(() => {
@@ -42,6 +43,13 @@ export async function apiRateLimitMiddleware(c: Context, next: Next): Promise<Re
   });
   const now = Date.now();
   const state = rateLimitStore.get(key);
+
+  // Emergency cleanup when store grows too large (DDoS mitigation)
+  if (rateLimitStore.size >= MAX_RATE_LIMIT_ENTRIES) {
+    for (const [k, v] of rateLimitStore) {
+      if (now >= v.resetAt) rateLimitStore.delete(k);
+    }
+  }
 
   if (!state || now >= state.resetAt) {
     rateLimitStore.set(key, {

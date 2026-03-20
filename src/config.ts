@@ -40,6 +40,9 @@ const envSchema = z.object({
   GOOGLE_API_KEY: z.string().optional().default(''),
   OPENROUTER_API_KEY: z.string().optional().default(''),
   OPENROUTER_MODEL: z.string().default('anthropic/claude-sonnet-4'),
+  CLAUDE_MODEL: z.string().default('claude-sonnet-4-5-20250514'),
+  OPENAI_MODEL: z.string().default('gpt-4o'),
+  GEMINI_MODEL: z.string().default('gemini-2.0-flash'),
 
   // Vault
   VAULT_PATH: z.string().default('./vault'),

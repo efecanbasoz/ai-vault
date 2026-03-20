@@ -43,8 +43,9 @@ export class OpenRouterAPIProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error({ provider: 'openrouter-api', status: response.status, error: errorText.slice(0, 500) }, 'Provider API error');
         return {
-          text: `OpenRouter API error (${response.status}): ${errorText}`,
+          text: `Provider error (${response.status}). Check server logs for details.`,
           sessionId: null,
           costUsd: null,
           isError: true,

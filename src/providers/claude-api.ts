@@ -27,7 +27,7 @@ export class ClaudeAPIProvider implements LLMProvider {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250514',
+          model: config.CLAUDE_MODEL,
           max_tokens: 8192,
           system: systemPrompt || undefined,
           messages: [{ role: 'user', content: prompt }],
@@ -37,8 +37,9 @@ export class ClaudeAPIProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error({ provider: 'claude-api', status: response.status, error: errorText.slice(0, 500) }, 'Provider API error');
         return {
-          text: `Claude API error (${response.status}): ${errorText}`,
+          text: `Provider error (${response.status}). Check server logs for details.`,
           sessionId: null,
           costUsd: null,
           isError: true,

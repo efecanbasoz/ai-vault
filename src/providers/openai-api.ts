@@ -32,7 +32,7 @@ export class OpenAIAPIProvider implements LLMProvider {
           'Authorization': `Bearer ${config.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: config.OPENAI_MODEL,
           messages,
           max_tokens: 8192,
         }),
@@ -41,8 +41,9 @@ export class OpenAIAPIProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error({ provider: 'openai-api', status: response.status, error: errorText.slice(0, 500) }, 'Provider API error');
         return {
-          text: `OpenAI API error (${response.status}): ${errorText}`,
+          text: `Provider error (${response.status}). Check server logs for details.`,
           sessionId: null,
           costUsd: null,
           isError: true,

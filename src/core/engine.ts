@@ -61,6 +61,12 @@ export async function execute(prompt: Prompt): Promise<PromptResult> {
       { role: 'assistant', content: result.text },
     );
 
+    // Prevent unbounded memory growth
+    const MAX_HISTORY = 200;
+    if (session.messageHistory.length > MAX_HISTORY) {
+      session.messageHistory = session.messageHistory.slice(-MAX_HISTORY);
+    }
+
     const durationMs = Date.now() - startTime;
     logger.info(
       { userId: prompt.userId, provider: provider.id, durationMs, cost: result.costUsd },
