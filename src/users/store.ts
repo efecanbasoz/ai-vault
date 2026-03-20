@@ -4,7 +4,6 @@ import { config } from '../config.js';
 import { logger } from '../logger.js';
 import type { UserId, InterfaceType } from '../types.js';
 import type { User } from './types.js';
-import { ensureVaultDirs } from '../vault/manager.js';
 
 function getUserDir(userId: UserId): string {
   return path.resolve(config.DATA_PATH, 'users', userId);
@@ -51,9 +50,11 @@ export function ensureUser(userId: UserId, iface: InterfaceType, displayName?: s
   const userDir = getUserDir(userId);
   fs.mkdirSync(userDir, { recursive: true });
 
-  // Create user's vault directories
+  // Create user's vault directories synchronously (consistent with rest of store)
   const vaultDir = path.join(userDir, 'vault');
-  ensureVaultDirs(vaultDir);
+  for (const cat of ['brainstorm', 'active', 'archive']) {
+    fs.mkdirSync(path.join(vaultDir, cat), { recursive: true });
+  }
 
   saveUser(user);
   logger.info({ userId, interface: iface }, 'New user created');
