@@ -19,14 +19,10 @@ export class GeminiAPIProvider implements LLMProvider {
     logger.debug({ provider: this.id }, 'Gemini API request');
 
     const promise = (async (): Promise<LLMResult> => {
-      const model = 'gemini-2.0-flash';
+      const model = config.GEMINI_MODEL;
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
       const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
-      if (systemPrompt) {
-        contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
-        contents.push({ role: 'model', parts: [{ text: 'Understood. I will follow these instructions.' }] });
-      }
       contents.push({ role: 'user', parts: [{ text: prompt }] });
 
       const response = await fetch(url, {
@@ -37,6 +33,7 @@ export class GeminiAPIProvider implements LLMProvider {
         },
         body: JSON.stringify({
           contents,
+          systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
           generationConfig: { maxOutputTokens: 8192 },
         }),
         signal: AbortSignal.timeout(config.RESPONSE_TIMEOUT_MS),
@@ -44,8 +41,9 @@ export class GeminiAPIProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error({ provider: 'gemini-api', status: response.status, error: errorText.slice(0, 500) }, 'Provider API error');
         return {
-          text: `Gemini API error (${response.status}): ${errorText}`,
+          text: `Provider error (${response.status}). Check server logs for details.`,
           sessionId: null,
           costUsd: null,
           isError: true,

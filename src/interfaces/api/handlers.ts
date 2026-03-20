@@ -12,7 +12,7 @@ import type { VaultCategory } from '../../types.js';
 const categorySchema = z.enum(['brainstorm', 'active', 'archive']);
 
 const chatSchema = z.object({
-  message: z.string().min(1),
+  message: z.string().min(1).max(100_000),
   provider: z.string().optional(),
 });
 
