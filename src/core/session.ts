@@ -45,6 +45,3 @@ export function setProvider(userId: UserId, providerId: string, defaultProviderI
   }
 }
 
-export function getAllSessions(): Map<UserId, UserSession> {
-  return sessions;
-}

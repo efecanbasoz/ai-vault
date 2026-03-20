@@ -4,8 +4,6 @@ import { logger } from '../logger.js';
 import { runSynthesis } from './digest.js';
 import { listUsers } from '../users/store.js';
 
-let task: cron.ScheduledTask | null = null;
-
 export function startScheduler(): void {
   if (!config.SYNTHESIS_ENABLED) return;
 
@@ -16,7 +14,7 @@ export function startScheduler(): void {
     return;
   }
 
-  task = cron.schedule(schedule, async () => {
+  cron.schedule(schedule, async () => {
     logger.info('Scheduled synthesis triggered');
 
     if (config.SINGLE_USER_MODE) {
@@ -40,10 +38,3 @@ export function startScheduler(): void {
   logger.info({ schedule }, 'Synthesis scheduler started');
 }
 
-export function stopScheduler(): void {
-  if (task) {
-    task.stop();
-    task = null;
-    logger.info('Synthesis scheduler stopped');
-  }
-}
