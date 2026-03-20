@@ -26,7 +26,7 @@ Telegram / REST API / CLI  -->  Engine  -->  LLM Providers  -->  Markdown Vault
 ## Quick Start
 
 ```bash
-git clone https://github.com/sirkhet-dev/ai-vault.git
+git clone https://github.com/efecanbasoz/ai-vault.git
 cd ai-vault
 npm install
 cp .env.example .env
@@ -191,7 +191,7 @@ All interfaces convert input to a `Prompt` object and call `engine.execute(promp
 ## Contributors
 
 - [Claude](https://github.com/claude)
-- [sirkhet-dev](https://github.com/sirkhet-dev)
+- [efecanbasoz](https://github.com/efecanbasoz)
 - [Codex](https://github.com/codex)
 
 ## License
