@@ -29,7 +29,7 @@
     "cli"
   ],
   "author": "Efecan Başöz <efecan@sirkhet.com>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@hono/node-server": "^1.19.10",
     "dotenv": "^16.4.7",
