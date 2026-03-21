@@ -7,6 +7,26 @@ import type { UserId, VaultCategory } from '../types.js';
 import type { Note, NoteMetadata } from './types.js';
 import { generateFilename, generateNoteContent, generateFrontmatter } from './templates.js';
 
+// SEC-002: Disable JavaScript frontmatter engine to prevent eval()-based RCE.
+const SAFE_MATTER_OPTIONS = {
+  engines: {
+    javascript: {
+      parse(): never { throw new Error('JavaScript frontmatter is disabled for security'); },
+      stringify(): never { throw new Error('JavaScript frontmatter is disabled for security'); },
+    },
+  },
+};
+
+function safeMatter(input: string) {
+  return matter(input, SAFE_MATTER_OPTIONS);
+}
+
+const VALID_CATEGORIES = new Set<string>(['brainstorm', 'active', 'archive']);
+
+export function isValidCategory(value: string | undefined): value is VaultCategory {
+  return value !== undefined && VALID_CATEGORIES.has(value);
+}
+
 function getVaultPath(userId: UserId): string {
   if (config.SINGLE_USER_MODE || userId === 'cli_local') {
     return path.resolve(config.VAULT_PATH);
@@ -72,7 +92,7 @@ export async function listNotes(
       const filepath = `${cat}/${file}`;
       try {
         const raw = await fs.readFile(path.join(vaultPath, filepath), 'utf-8');
-        const parsed = matter(raw);
+        const parsed = safeMatter(raw);
         notes.push({
           filepath,
           metadata: {
@@ -105,7 +125,7 @@ export async function getNote(userId: UserId, filepath: string): Promise<Note | 
   if (!(await fileExists(resolved.fullPath))) return null;
 
   const raw = await fs.readFile(resolved.fullPath, 'utf-8');
-  const parsed = matter(raw);
+  const parsed = safeMatter(raw);
 
   return {
     filepath: resolved.normalizedPath,
@@ -150,7 +170,7 @@ export async function updateNote(userId: UserId, filepath: string, body: string)
   if (!(await fileExists(resolved.fullPath))) return false;
 
   const raw = await fs.readFile(resolved.fullPath, 'utf-8');
-  const parsed = matter(raw);
+  const parsed = safeMatter(raw);
   parsed.data.updated = new Date().toISOString();
 
   const newContent = `${generateFrontmatter(parsed.data as NoteMetadata)}\n\n${body}`;
