@@ -2,7 +2,7 @@ import { config } from '../config.js';
 import { logger } from '../logger.js';
 import type { Prompt, PromptResult } from '../types.js';
 import { getProvider, getDefaultProvider } from '../providers/registry.js';
-import { getSession } from './session.js';
+import { getSession, trimHistory } from './session.js';
 
 export async function execute(prompt: Prompt): Promise<PromptResult> {
   const startTime = Date.now();
@@ -61,11 +61,8 @@ export async function execute(prompt: Prompt): Promise<PromptResult> {
       { role: 'assistant', content: result.text },
     );
 
-    // Prevent unbounded memory growth
-    const MAX_HISTORY = 200;
-    if (session.messageHistory.length > MAX_HISTORY) {
-      session.messageHistory = session.messageHistory.slice(-MAX_HISTORY);
-    }
+    // SEC-006: Trim history to prevent unbounded memory growth
+    trimHistory(session);
 
     const durationMs = Date.now() - startTime;
     logger.info(

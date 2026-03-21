@@ -8,8 +8,8 @@ import type { AppInterface } from '../types.js';
 import { handleCommand } from './commands.js';
 import { formatPrompt, formatResponse, formatHeader, formatError } from './formatter.js';
 import * as vault from '../../vault/manager.js';
+import { isValidCategory } from '../../vault/manager.js';
 import { search } from '../../vault/search.js';
-import type { VaultCategory } from '../../types.js';
 
 export class CLIInterface implements AppInterface {
   readonly name = 'cli';
@@ -80,9 +80,14 @@ export class CLIInterface implements AppInterface {
     }
 
     if (input.startsWith('/list')) {
-      const category = input.split(/\s+/)[1] as VaultCategory | undefined;
+      const rawCategory = input.split(/\s+/)[1];
+      if (rawCategory !== undefined && !isValidCategory(rawCategory)) {
+        console.log('Invalid category. Must be: brainstorm, active, or archive.');
+        this.prompt();
+        return;
+      }
       try {
-        const notes = await vault.listNotes(this.userId, category);
+        const notes = await vault.listNotes(this.userId, rawCategory);
         if (notes.length === 0) {
           console.log('No notes found.');
         } else {
@@ -97,7 +102,12 @@ export class CLIInterface implements AppInterface {
 
     if (input.startsWith('/save')) {
       const args = input.split(/\s+/).slice(1);
-      const category = (args[0] || 'brainstorm') as VaultCategory;
+      const rawCategory = args[0] || 'brainstorm';
+      if (!isValidCategory(rawCategory)) {
+        console.log('Invalid category. Must be: brainstorm, active, or archive.');
+        this.prompt();
+        return;
+      }
       const title = args.slice(1).join(' ') || undefined;
       const session = getSession(this.userId, config.DEFAULT_PROVIDER);
       const lastMessages = session.messageHistory.slice(-2);
@@ -107,7 +117,7 @@ export class CLIInterface implements AppInterface {
       } else {
         try {
           const content = lastMessages.map((m) => `**${m.role}:** ${m.content}`).join('\n\n---\n\n');
-          const filepath = await vault.saveFromChat(this.userId, category, content, title);
+          const filepath = await vault.saveFromChat(this.userId, rawCategory, content, title);
           console.log(`Saved to ${filepath}`);
         } catch {
           console.log('Save failed.');

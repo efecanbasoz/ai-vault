@@ -4,6 +4,8 @@ import { getSession, resetSession, setProvider } from '../../core/session.js';
 import { cancelCurrent } from '../../core/queue.js';
 import { listProviders, getProvider } from '../../providers/registry.js';
 import { resolveUserIdFromTelegram } from '../../users/auth.js';
+import { isValidCategory } from '../../vault/manager.js';
+import { logger } from '../../logger.js';
 
 function resolveUserId(ctx: Context): string {
   return resolveUserIdFromTelegram(ctx.from?.id ?? 0);
@@ -101,7 +103,11 @@ export async function saveCommand(ctx: Context): Promise<void> {
   const text = ctx.message?.text ?? '';
   const args = text.split(/\s+/).slice(1);
 
-  const category = args[0] || 'brainstorm';
+  const rawCategory = args[0] || 'brainstorm';
+  if (!isValidCategory(rawCategory)) {
+    await ctx.reply('Invalid category. Must be: brainstorm, active, or archive.');
+    return;
+  }
   const title = args.slice(1).join(' ') || undefined;
 
   try {
@@ -115,9 +121,10 @@ export async function saveCommand(ctx: Context): Promise<void> {
     }
 
     const content = lastMessages.map((m) => `**${m.role}:** ${m.content}`).join('\n\n---\n\n');
-    const filepath = await saveFromChat(userId, category as 'brainstorm' | 'active' | 'archive', content, title);
+    const filepath = await saveFromChat(userId, rawCategory, content, title);
     await ctx.reply(`Saved to <code>${escapeHtml(filepath)}</code>`, { parse_mode: 'HTML' });
   } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'save' }, 'Telegram save failed');
     await ctx.reply('Failed to save. Vault system may not be initialized.');
   }
 }
@@ -146,7 +153,8 @@ export async function searchCommand(ctx: Context): Promise<void> {
       .map((r, i) => `${i + 1}. <code>${escapeHtml(r.filepath)}</code>\n   ${escapeHtml(r.snippet)}`)
       .join('\n\n');
     await ctx.reply(`<b>Search results:</b>\n\n${formatted}`, { parse_mode: 'HTML' });
-  } catch {
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'search' }, 'Telegram search failed');
     await ctx.reply('Search not available. Vault system may not be initialized.');
   }
 }
@@ -154,15 +162,19 @@ export async function searchCommand(ctx: Context): Promise<void> {
 export async function listCommand(ctx: Context): Promise<void> {
   const text = ctx.message?.text ?? '';
   const args = text.split(/\s+/).slice(1);
-  const category = args[0] || undefined;
+  const rawCategory = args[0] || undefined;
+  if (rawCategory !== undefined && !isValidCategory(rawCategory)) {
+    await ctx.reply('Invalid category. Must be: brainstorm, active, or archive.');
+    return;
+  }
   const userId = resolveUserId(ctx);
 
   try {
     const { listNotes } = await import('../../vault/manager.js');
-    const notes = await listNotes(userId, category as 'brainstorm' | 'active' | 'archive' | undefined);
+    const notes = await listNotes(userId, rawCategory);
 
     if (notes.length === 0) {
-      await ctx.reply(category ? `No notes in ${category}.` : 'Vault is empty.');
+      await ctx.reply(rawCategory ? `No notes in ${rawCategory}.` : 'Vault is empty.');
       return;
     }
 
@@ -171,7 +183,8 @@ export async function listCommand(ctx: Context): Promise<void> {
       .map((n) => `  <code>${escapeHtml(n.filepath)}</code>`)
       .join('\n');
     await ctx.reply(`<b>Notes (${notes.length}):</b>\n${formatted}`, { parse_mode: 'HTML' });
-  } catch {
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'list' }, 'Telegram list failed');
     await ctx.reply('List not available. Vault system may not be initialized.');
   }
 }
@@ -183,7 +196,8 @@ export async function synthesizeCommand(ctx: Context): Promise<void> {
     const userId = resolveUserId(ctx);
     const result = await runSynthesis(userId);
     await ctx.reply(`Synthesis complete: <code>${escapeHtml(result)}</code>`, { parse_mode: 'HTML' });
-  } catch {
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'synthesize' }, 'Telegram synthesis failed');
     await ctx.reply('Synthesis not available or failed.');
   }
 }

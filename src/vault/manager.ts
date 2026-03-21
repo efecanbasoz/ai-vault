@@ -7,6 +7,26 @@ import type { UserId, VaultCategory } from '../types.js';
 import type { Note, NoteMetadata } from './types.js';
 import { generateFilename, generateNoteContent, generateFrontmatter } from './templates.js';
 
+// SEC-002: Disable JavaScript frontmatter engine to prevent eval()-based RCE.
+const SAFE_MATTER_OPTIONS = {
+  engines: {
+    javascript: {
+      parse(): never { throw new Error('JavaScript frontmatter is disabled for security'); },
+      stringify(): never { throw new Error('JavaScript frontmatter is disabled for security'); },
+    },
+  },
+};
+
+function safeMatter(input: string) {
+  return matter(input, SAFE_MATTER_OPTIONS);
+}
+
+const VALID_CATEGORIES = new Set<string>(['brainstorm', 'active', 'archive']);
+
+export function isValidCategory(value: string | undefined): value is VaultCategory {
+  return value !== undefined && VALID_CATEGORIES.has(value);
+}
+
 function getVaultPath(userId: UserId): string {
   if (config.SINGLE_USER_MODE || userId === 'cli_local') {
     return path.resolve(config.VAULT_PATH);
@@ -52,6 +72,16 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+// SEC-004: Reject symlinks to prevent path redirection attacks
+async function rejectSymlink(filePath: string): Promise<boolean> {
+  try {
+    const stat = await fs.lstat(filePath);
+    return stat.isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
 export async function listNotes(
   userId: UserId,
   category?: VaultCategory,
@@ -72,7 +102,7 @@ export async function listNotes(
       const filepath = `${cat}/${file}`;
       try {
         const raw = await fs.readFile(path.join(vaultPath, filepath), 'utf-8');
-        const parsed = matter(raw);
+        const parsed = safeMatter(raw);
         notes.push({
           filepath,
           metadata: {
@@ -103,9 +133,10 @@ export async function getNote(userId: UserId, filepath: string): Promise<Note | 
   if (!resolved) return null;
 
   if (!(await fileExists(resolved.fullPath))) return null;
+  if (await rejectSymlink(resolved.fullPath)) return null;
 
   const raw = await fs.readFile(resolved.fullPath, 'utf-8');
-  const parsed = matter(raw);
+  const parsed = safeMatter(raw);
 
   return {
     filepath: resolved.normalizedPath,
@@ -148,12 +179,21 @@ export async function updateNote(userId: UserId, filepath: string, body: string)
   if (!resolved) return false;
 
   if (!(await fileExists(resolved.fullPath))) return false;
+  if (await rejectSymlink(resolved.fullPath)) return false;
 
   const raw = await fs.readFile(resolved.fullPath, 'utf-8');
-  const parsed = matter(raw);
+  const parsed = safeMatter(raw);
   parsed.data.updated = new Date().toISOString();
 
-  const newContent = `${generateFrontmatter(parsed.data as NoteMetadata)}\n\n${body}`;
+  // QA-007: Validate frontmatter instead of blind cast to prevent invalid YAML output
+  const metadata: NoteMetadata = {
+    title: typeof parsed.data.title === 'string' ? parsed.data.title : path.basename(filepath, '.md'),
+    category: resolved.category,
+    tags: Array.isArray(parsed.data.tags) ? parsed.data.tags.filter((t: unknown) => typeof t === 'string') : [],
+    created: typeof parsed.data.created === 'string' ? parsed.data.created : new Date().toISOString(),
+    updated: parsed.data.updated as string,
+  };
+  const newContent = `${generateFrontmatter(metadata)}\n\n${body}`;
   await fs.writeFile(resolved.fullPath, newContent, 'utf-8');
   return true;
 }
@@ -164,6 +204,7 @@ export async function deleteNote(userId: UserId, filepath: string): Promise<bool
   if (!resolved) return false;
 
   if (!(await fileExists(resolved.fullPath))) return false;
+  if (await rejectSymlink(resolved.fullPath)) return false;
 
   await fs.unlink(resolved.fullPath);
   logger.debug({ filepath: resolved.normalizedPath, userId }, 'Note deleted');

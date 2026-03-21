@@ -51,8 +51,8 @@ async function start(): Promise<void> {
     try {
       const { startScheduler } = await import('./synthesis/scheduler.js');
       startScheduler();
-    } catch {
-      // Synthesis not yet implemented
+    } catch (err) {
+      logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'Failed to start synthesis scheduler');
     }
   }
 

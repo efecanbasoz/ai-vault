@@ -5,7 +5,13 @@ import { logger } from '../logger.js';
 import type { UserId, InterfaceType } from '../types.js';
 import type { User } from './types.js';
 
+// SEC-008: Validate userId format before embedding in filesystem paths
+const SAFE_USER_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
 function getUserDir(userId: UserId): string {
+  if (!SAFE_USER_ID_PATTERN.test(userId)) {
+    throw new Error(`Invalid userId format: ${userId.slice(0, 20)}`);
+  }
   return path.resolve(config.DATA_PATH, 'users', userId);
 }
 

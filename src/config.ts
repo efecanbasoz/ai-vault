@@ -22,6 +22,7 @@ const envSchema = z.object({
   API_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
   API_TRUST_PROXY_HEADERS: z.coerce.boolean().default(false),
+  API_CORS_ORIGIN: z.string().optional().default(''),
   CLI_ENABLED: z.coerce.boolean().default(true),
 
   // Auth

@@ -37,32 +37,32 @@ export async function initProviders(): Promise<void> {
   try {
     const { GeminiCLIProvider } = await import('./gemini-cli.js');
     registerProvider(new GeminiCLIProvider());
-  } catch { /* not yet implemented */ }
+  } catch (err) { logger.debug({ err: err instanceof Error ? err.message : String(err) }, 'Provider load skipped'); }
 
   try {
     const { CodexCLIProvider } = await import('./codex-cli.js');
     registerProvider(new CodexCLIProvider());
-  } catch { /* not yet implemented */ }
+  } catch (err) { logger.debug({ err: err instanceof Error ? err.message : String(err) }, 'Provider load skipped'); }
 
   try {
     const { ClaudeAPIProvider } = await import('./claude-api.js');
     registerProvider(new ClaudeAPIProvider());
-  } catch { /* not yet implemented */ }
+  } catch (err) { logger.debug({ err: err instanceof Error ? err.message : String(err) }, 'Provider load skipped'); }
 
   try {
     const { OpenAIAPIProvider } = await import('./openai-api.js');
     registerProvider(new OpenAIAPIProvider());
-  } catch { /* not yet implemented */ }
+  } catch (err) { logger.debug({ err: err instanceof Error ? err.message : String(err) }, 'Provider load skipped'); }
 
   try {
     const { GeminiAPIProvider } = await import('./gemini-api.js');
     registerProvider(new GeminiAPIProvider());
-  } catch { /* not yet implemented */ }
+  } catch (err) { logger.debug({ err: err instanceof Error ? err.message : String(err) }, 'Provider load skipped'); }
 
   try {
     const { OpenRouterAPIProvider } = await import('./openrouter-api.js');
     registerProvider(new OpenRouterAPIProvider());
-  } catch { /* not yet implemented */ }
+  } catch (err) { logger.debug({ err: err instanceof Error ? err.message : String(err) }, 'Provider load skipped'); }
 
   // Log available providers
   const available: string[] = [];

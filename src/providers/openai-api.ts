@@ -41,7 +41,8 @@ export class OpenAIAPIProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error({ provider: 'openai-api', status: response.status, error: errorText.slice(0, 500) }, 'Provider API error');
+        // SEC-010: Log status only, not raw error body which may contain sensitive data
+        logger.error({ provider: 'openai-api', status: response.status, errorLength: errorText.length }, 'Provider API error');
         return {
           text: `Provider error (${response.status}). Check server logs for details.`,
           sessionId: null,
