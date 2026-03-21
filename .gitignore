@@ -10,3 +10,5 @@ vault/archive/*
 !vault/active/.gitkeep
 !vault/archive/.gitkeep
 .DS_Store
+security-scan-results.md
+quality-scan-results.md
