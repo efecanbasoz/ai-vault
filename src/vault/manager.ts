@@ -72,6 +72,16 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+// SEC-004: Reject symlinks to prevent path redirection attacks
+async function rejectSymlink(filePath: string): Promise<boolean> {
+  try {
+    const stat = await fs.lstat(filePath);
+    return stat.isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
 export async function listNotes(
   userId: UserId,
   category?: VaultCategory,
@@ -123,6 +133,7 @@ export async function getNote(userId: UserId, filepath: string): Promise<Note | 
   if (!resolved) return null;
 
   if (!(await fileExists(resolved.fullPath))) return null;
+  if (await rejectSymlink(resolved.fullPath)) return null;
 
   const raw = await fs.readFile(resolved.fullPath, 'utf-8');
   const parsed = safeMatter(raw);
@@ -168,6 +179,7 @@ export async function updateNote(userId: UserId, filepath: string, body: string)
   if (!resolved) return false;
 
   if (!(await fileExists(resolved.fullPath))) return false;
+  if (await rejectSymlink(resolved.fullPath)) return false;
 
   const raw = await fs.readFile(resolved.fullPath, 'utf-8');
   const parsed = safeMatter(raw);
@@ -184,6 +196,7 @@ export async function deleteNote(userId: UserId, filepath: string): Promise<bool
   if (!resolved) return false;
 
   if (!(await fileExists(resolved.fullPath))) return false;
+  if (await rejectSymlink(resolved.fullPath)) return false;
 
   await fs.unlink(resolved.fullPath);
   logger.debug({ filepath: resolved.normalizedPath, userId }, 'Note deleted');

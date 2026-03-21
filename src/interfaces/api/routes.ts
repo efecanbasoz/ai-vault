@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { cors } from 'hono/cors';
+import { config } from '../../config.js';
 import { apiAuthMiddleware, apiBodySizeMiddleware, apiRateLimitMiddleware } from './middleware.js';
 import {
   chatHandler,
@@ -20,7 +22,8 @@ import {
 export function createApiRoutes(): Hono {
   const api = new Hono();
 
-  // Security & auth middleware for all API routes
+  // SEC-007: CORS + security headers for all API routes
+  api.use('*', cors({ origin: config.API_CORS_ORIGIN || '*' }));
   api.use('*', secureHeaders());
   api.use('*', apiBodySizeMiddleware);
   api.use('*', apiRateLimitMiddleware);

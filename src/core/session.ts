@@ -1,6 +1,10 @@
 import type { UserId } from '../types.js';
 import type { ChildProcess } from 'node:child_process';
 
+// SEC-006: Prevent unbounded memory growth
+const MAX_SESSIONS = 1000;
+const MAX_HISTORY_ITEMS = 50;
+
 export interface UserSession {
   userId: UserId;
   providerId: string;
@@ -15,6 +19,12 @@ const sessions = new Map<UserId, UserSession>();
 export function getSession(userId: UserId, defaultProviderId: string): UserSession {
   let session = sessions.get(userId);
   if (!session) {
+    // SEC-006: Evict oldest non-busy session when at capacity
+    if (sessions.size >= MAX_SESSIONS) {
+      for (const [key, s] of sessions) {
+        if (!s.busy) { sessions.delete(key); break; }
+      }
+    }
     session = {
       userId,
       providerId: defaultProviderId,
@@ -26,6 +36,12 @@ export function getSession(userId: UserId, defaultProviderId: string): UserSessi
     sessions.set(userId, session);
   }
   return session;
+}
+
+export function trimHistory(session: UserSession): void {
+  if (session.messageHistory.length > MAX_HISTORY_ITEMS) {
+    session.messageHistory = session.messageHistory.slice(-MAX_HISTORY_ITEMS);
+  }
 }
 
 export function resetSession(userId: UserId): void {
