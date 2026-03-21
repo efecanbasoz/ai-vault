@@ -1,12 +1,11 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { buildRateLimitKey, getTrustedClientIp, resolveRateLimitUserId } from './request-identity';
+import { test, expect } from 'vitest';
+import { buildRateLimitKey, getTrustedClientIp, resolveRateLimitUserId } from '../src/interfaces/api/request-identity';
 
 test('getTrustedClientIp ignores proxy headers unless trust is enabled', () => {
   const headers = new Headers({ 'x-forwarded-for': '203.0.113.1, 10.0.0.1' });
 
-  assert.equal(getTrustedClientIp(headers, false), null);
-  assert.equal(getTrustedClientIp(headers, true), '203.0.113.1');
+  expect(getTrustedClientIp(headers, false)).toBe(null);
+  expect(getTrustedClientIp(headers, true)).toBe('203.0.113.1');
 });
 
 test('buildRateLimitKey prefers authenticated user IDs', () => {
@@ -17,7 +16,7 @@ test('buildRateLimitKey prefers authenticated user IDs', () => {
     trustProxyHeaders: true,
   });
 
-  assert.equal(key, 'user:api_deadbeef:/api/v1/chat');
+  expect(key).toBe('user:api_deadbeef:/api/v1/chat');
 });
 
 test('buildRateLimitKey falls back to trusted proxy IPs when anonymous', () => {
@@ -27,7 +26,7 @@ test('buildRateLimitKey falls back to trusted proxy IPs when anonymous', () => {
     trustProxyHeaders: true,
   });
 
-  assert.equal(key, 'ip:198.51.100.3:/api/v1/status');
+  expect(key).toBe('ip:198.51.100.3:/api/v1/status');
 });
 
 test('buildRateLimitKey falls back to user-agent fingerprints before the anonymous bucket', () => {
@@ -37,7 +36,7 @@ test('buildRateLimitKey falls back to user-agent fingerprints before the anonymo
     trustProxyHeaders: false,
   });
 
-  assert.equal(key, 'agent:curl/8.6.0:/api/v1/status');
+  expect(key).toBe('agent:curl/8.6.0:/api/v1/status');
 });
 
 test('buildRateLimitKey uses an anonymous bucket when no fallback identity is available', () => {
@@ -47,27 +46,25 @@ test('buildRateLimitKey uses an anonymous bucket when no fallback identity is av
     trustProxyHeaders: false,
   });
 
-  assert.equal(key, 'anonymous:/api/v1/status');
+  expect(key).toBe('anonymous:/api/v1/status');
 });
 
 test('resolveRateLimitUserId returns a user only for valid bearer tokens', () => {
-  assert.equal(
+  expect(
     resolveRateLimitUserId({
       authorizationHeader: 'Bearer live-token',
       apiKeyConfigured: true,
       validateApiKey: (token) => token === 'live-token',
       resolveUserIdFromApiKey: (token) => `api_${token}`,
     }),
-    'api_live-token',
-  );
+  ).toBe('api_live-token');
 
-  assert.equal(
+  expect(
     resolveRateLimitUserId({
       authorizationHeader: 'Bearer wrong-token',
       apiKeyConfigured: true,
       validateApiKey: () => false,
       resolveUserIdFromApiKey: (token) => `api_${token}`,
     }),
-    null,
-  );
+  ).toBe(null);
 });

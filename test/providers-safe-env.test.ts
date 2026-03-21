@@ -1,6 +1,5 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { createSafeCliEnv } from './safe-env';
+import { test, expect } from 'vitest';
+import { createSafeCliEnv } from '../src/providers/safe-env';
 
 test('createSafeCliEnv keeps standard process context while dropping unrelated secrets', () => {
   const safeEnv = createSafeCliEnv(
@@ -17,8 +16,8 @@ test('createSafeCliEnv keeps standard process context while dropping unrelated s
     },
   );
 
-  assert.equal(safeEnv.PATH, '/usr/bin');
-  assert.equal(safeEnv.OPENAI_API_KEY, 'sk-live');
-  assert.equal(safeEnv.CODEX_PROFILE, 'default');
-  assert.equal('DATABASE_URL' in safeEnv, false);
+  expect(safeEnv.PATH).toBe('/usr/bin');
+  expect(safeEnv.OPENAI_API_KEY).toBe('sk-live');
+  expect(safeEnv.CODEX_PROFILE).toBe('default');
+  expect('DATABASE_URL' in safeEnv).toBe(false);
 });
