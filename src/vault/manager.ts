@@ -185,7 +185,15 @@ export async function updateNote(userId: UserId, filepath: string, body: string)
   const parsed = safeMatter(raw);
   parsed.data.updated = new Date().toISOString();
 
-  const newContent = `${generateFrontmatter(parsed.data as NoteMetadata)}\n\n${body}`;
+  // QA-007: Validate frontmatter instead of blind cast to prevent invalid YAML output
+  const metadata: NoteMetadata = {
+    title: typeof parsed.data.title === 'string' ? parsed.data.title : path.basename(filepath, '.md'),
+    category: resolved.category,
+    tags: Array.isArray(parsed.data.tags) ? parsed.data.tags.filter((t: unknown) => typeof t === 'string') : [],
+    created: typeof parsed.data.created === 'string' ? parsed.data.created : new Date().toISOString(),
+    updated: parsed.data.updated as string,
+  };
+  const newContent = `${generateFrontmatter(metadata)}\n\n${body}`;
   await fs.writeFile(resolved.fullPath, newContent, 'utf-8');
   return true;
 }

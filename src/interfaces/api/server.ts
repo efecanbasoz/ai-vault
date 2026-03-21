@@ -21,6 +21,12 @@ export class APIInterface implements AppInterface {
   async start(): Promise<void> {
     const app = new Hono();
 
+    // QA-009: Global error boundary for consistent JSON error responses
+    app.onError((err, c) => {
+      logger.error({ err: err.message }, 'Unhandled API error');
+      return c.json({ error: 'Internal server error' }, 500);
+    });
+
     // Health check
     app.get('/health', (c) => c.json({ status: 'ok', version: APP_VERSION }));
 
