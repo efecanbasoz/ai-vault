@@ -53,7 +53,8 @@ export class ClaudeCLIProvider implements LLMProvider {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    logger.debug({ provider: this.id, sessionId, cwd: workingDir }, 'Claude CLI spawned');
+    // SEC-010: Redact session ID in logs to prevent session hijacking
+    logger.debug({ provider: this.id, hasSession: !!sessionId, cwd: workingDir }, 'Claude CLI spawned');
 
     const promise = new Promise<LLMResult>((resolve, reject) => {
       let stdout = '';
@@ -75,7 +76,7 @@ export class ClaudeCLIProvider implements LLMProvider {
         clearTimeout(timer);
 
         if (stderr) {
-          logger.debug({ stderr: stderr.slice(0, 500) }, 'Claude CLI stderr');
+          logger.debug({ provider: this.id, stderrLength: stderr.length }, 'Claude CLI stderr output');
         }
 
         try {

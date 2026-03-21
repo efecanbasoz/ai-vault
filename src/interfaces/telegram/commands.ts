@@ -5,6 +5,7 @@ import { cancelCurrent } from '../../core/queue.js';
 import { listProviders, getProvider } from '../../providers/registry.js';
 import { resolveUserIdFromTelegram } from '../../users/auth.js';
 import { isValidCategory } from '../../vault/manager.js';
+import { logger } from '../../logger.js';
 
 function resolveUserId(ctx: Context): string {
   return resolveUserIdFromTelegram(ctx.from?.id ?? 0);
@@ -123,6 +124,7 @@ export async function saveCommand(ctx: Context): Promise<void> {
     const filepath = await saveFromChat(userId, rawCategory, content, title);
     await ctx.reply(`Saved to <code>${escapeHtml(filepath)}</code>`, { parse_mode: 'HTML' });
   } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'save' }, 'Telegram save failed');
     await ctx.reply('Failed to save. Vault system may not be initialized.');
   }
 }
@@ -151,7 +153,8 @@ export async function searchCommand(ctx: Context): Promise<void> {
       .map((r, i) => `${i + 1}. <code>${escapeHtml(r.filepath)}</code>\n   ${escapeHtml(r.snippet)}`)
       .join('\n\n');
     await ctx.reply(`<b>Search results:</b>\n\n${formatted}`, { parse_mode: 'HTML' });
-  } catch {
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'search' }, 'Telegram search failed');
     await ctx.reply('Search not available. Vault system may not be initialized.');
   }
 }
@@ -180,7 +183,8 @@ export async function listCommand(ctx: Context): Promise<void> {
       .map((n) => `  <code>${escapeHtml(n.filepath)}</code>`)
       .join('\n');
     await ctx.reply(`<b>Notes (${notes.length}):</b>\n${formatted}`, { parse_mode: 'HTML' });
-  } catch {
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'list' }, 'Telegram list failed');
     await ctx.reply('List not available. Vault system may not be initialized.');
   }
 }
@@ -192,7 +196,8 @@ export async function synthesizeCommand(ctx: Context): Promise<void> {
     const userId = resolveUserId(ctx);
     const result = await runSynthesis(userId);
     await ctx.reply(`Synthesis complete: <code>${escapeHtml(result)}</code>`, { parse_mode: 'HTML' });
-  } catch {
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), command: 'synthesize' }, 'Telegram synthesis failed');
     await ctx.reply('Synthesis not available or failed.');
   }
 }
