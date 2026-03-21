@@ -28,7 +28,7 @@
     "second-brain",
     "cli"
   ],
-  "author": "",
+  "author": "Efecan Başöz <efecan@sirkhet.com>",
   "license": "MIT",
   "dependencies": {
     "@hono/node-server": "^1.19.10",
