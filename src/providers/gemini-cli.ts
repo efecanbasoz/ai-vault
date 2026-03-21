@@ -1,8 +1,21 @@
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import type { LLMProvider, LLMProviderHandle, LLMResult } from './types.js';
 import { createSafeCliEnv } from './safe-env.js';
+
+function readGeminiCliKey(): string | undefined {
+  try {
+    const envFile = readFileSync(join(homedir(), '.gemini', '.env'), 'utf-8');
+    const match = envFile.match(/^GEMINI_API_KEY=(.+)$/m);
+    return match?.[1]?.trim();
+  } catch {
+    return undefined;
+  }
+}
 
 export class GeminiCLIProvider implements LLMProvider {
   readonly id = 'gemini-cli';
@@ -32,12 +45,16 @@ export class GeminiCLIProvider implements LLMProvider {
 
   run(prompt: string, workingDir: string, _sessionId: string | null, systemPrompt: string): LLMProviderHandle {
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n---\n\n${prompt}` : prompt;
-    const child = spawn(config.GEMINI_BIN, ['-p', fullPrompt], {
+    const args = config.GEMINI_MODEL ? ['-m', config.GEMINI_MODEL, '-p', fullPrompt] : ['-p', fullPrompt];
+    const child = spawn(config.GEMINI_BIN, args, {
       cwd: workingDir,
-      env: createSafeCliEnv({
-        exactKeys: ['GOOGLE_API_KEY'],
-        prefixKeys: ['GEMINI_'],
-      }),
+      env: {
+        ...createSafeCliEnv({
+          exactKeys: ['GOOGLE_API_KEY'],
+          prefixKeys: ['GEMINI_'],
+        }),
+        ...(!process.env.GEMINI_API_KEY && { GEMINI_API_KEY: readGeminiCliKey() }),
+      },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
