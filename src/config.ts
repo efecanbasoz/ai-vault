@@ -10,11 +10,14 @@ const commaSeparatedIds = z
     return val.split(',').map((id) => Number(id.trim())).filter(Boolean);
   });
 
+const envBool = (defaultVal: boolean) =>
+  z.string().optional().default(String(defaultVal)).transform((val) => val.toLowerCase() === 'true' || val === '1');
+
 const envSchema = z.object({
   // Interfaces
-  TELEGRAM_ENABLED: z.coerce.boolean().default(true),
+  TELEGRAM_ENABLED: envBool(true),
   TELEGRAM_BOT_TOKEN: z.string().optional().default(''),
-  API_ENABLED: z.coerce.boolean().default(true),
+  API_ENABLED: envBool(true),
   API_PORT: z.coerce.number().int().positive().default(3000),
   API_KEY: z.string().optional().default(''),
   // SEC-001: Support multiple API keys for per-user isolation (comma-separated)
@@ -22,23 +25,23 @@ const envSchema = z.object({
     if (!val.trim()) return [];
     return val.split(',').map((k) => k.trim()).filter(Boolean);
   }),
-  API_ALLOW_ANONYMOUS: z.coerce.boolean().default(false),
+  API_ALLOW_ANONYMOUS: envBool(false),
   API_MAX_BODY_BYTES: z.coerce.number().int().positive().default(1_048_576),
   API_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
-  API_TRUST_PROXY_HEADERS: z.coerce.boolean().default(false),
+  API_TRUST_PROXY_HEADERS: envBool(false),
   API_CORS_ORIGIN: z.string().optional().default(''),
-  CLI_ENABLED: z.coerce.boolean().default(true),
+  CLI_ENABLED: envBool(true),
 
   // Auth
-  SINGLE_USER_MODE: z.coerce.boolean().default(false),
-  TELEGRAM_ALLOW_PUBLIC: z.coerce.boolean().default(false),
+  SINGLE_USER_MODE: envBool(false),
+  TELEGRAM_ALLOW_PUBLIC: envBool(false),
   TELEGRAM_ALLOWED_USERS: commaSeparatedIds,
 
   // Providers
   DEFAULT_PROVIDER: z.string().default('claude-cli'),
   CLAUDE_BIN: z.string().default('claude'),
-  CLAUDE_SKIP_PERMISSIONS: z.coerce.boolean().default(false),
+  CLAUDE_SKIP_PERMISSIONS: envBool(false),
   GEMINI_BIN: z.string().default('gemini'),
   CODEX_BIN: z.string().default('codex'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
@@ -55,7 +58,7 @@ const envSchema = z.object({
   DATA_PATH: z.string().default('./data'),
 
   // Synthesis
-  SYNTHESIS_ENABLED: z.coerce.boolean().default(true),
+  SYNTHESIS_ENABLED: envBool(true),
   SYNTHESIS_SCHEDULE: z.string().default('0 9 * * 0'),
   SYNTHESIS_PROVIDER: z.string().default('claude-cli'),
 
