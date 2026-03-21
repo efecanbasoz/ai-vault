@@ -2,6 +2,10 @@ import { getAllNoteContents } from './manager.js';
 import type { SearchResult, SearchOptions } from './types.js';
 import type { UserId } from '../types.js';
 
+// SEC-009: Cache search index per user with short TTL to avoid rebuilding every query
+const INDEX_CACHE_TTL_MS = 10_000;
+const indexCache = new Map<string, { ts: number; noteCount: number; index: Map<string, IndexEntry[]>; docs: Array<{ filepath: string; content: string; title: string; tags: string[]; metadata: { title: string; category: string; tags: string[]; created: string; updated: string } }> }>();
+
 interface IndexEntry {
   filepath: string;
   term: string;
@@ -92,7 +96,17 @@ export async function search(userId: UserId, query: string, options?: SearchOpti
     metadata: n.metadata,
   }));
 
-  const index = buildIndex(docs);
+  // SEC-009: Use cached index if note count unchanged and TTL not expired
+  const cacheKey = userId;
+  const cached = indexCache.get(cacheKey);
+  const now = Date.now();
+  let index: Map<string, IndexEntry[]>;
+  if (cached && now - cached.ts < INDEX_CACHE_TTL_MS && cached.noteCount === docs.length) {
+    index = cached.index;
+  } else {
+    index = buildIndex(docs);
+    indexCache.set(cacheKey, { ts: now, noteCount: docs.length, index, docs });
+  }
   const queryTokens = tokenize(query);
 
   // Aggregate scores per filepath

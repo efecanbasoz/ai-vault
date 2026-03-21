@@ -17,6 +17,11 @@ const envSchema = z.object({
   API_ENABLED: z.coerce.boolean().default(true),
   API_PORT: z.coerce.number().int().positive().default(3000),
   API_KEY: z.string().optional().default(''),
+  // SEC-001: Support multiple API keys for per-user isolation (comma-separated)
+  API_KEYS: z.string().optional().default('').transform((val) => {
+    if (!val.trim()) return [];
+    return val.split(',').map((k) => k.trim()).filter(Boolean);
+  }),
   API_ALLOW_ANONYMOUS: z.coerce.boolean().default(false),
   API_MAX_BODY_BYTES: z.coerce.number().int().positive().default(1_048_576),
   API_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),

@@ -18,12 +18,18 @@ export function resolveUserIdFromCli(): UserId {
 }
 
 export function validateApiKey(providedKey: string): boolean {
-  if (!config.API_KEY) return true; // No key configured = open access
-  // Hash both keys so lengths are always equal (32 bytes),
-  // preventing timing side-channel leaks on key length.
-  const a = createHash('sha256').update(providedKey).digest();
-  const b = createHash('sha256').update(config.API_KEY).digest();
-  return timingSafeEqual(a, b);
+  // SEC-001: Support multiple API keys for per-user isolation.
+  // Check API_KEYS first (comma-separated list), then fall back to single API_KEY.
+  const keys = config.API_KEYS.length > 0 ? config.API_KEYS : config.API_KEY ? [config.API_KEY] : [];
+
+  if (keys.length === 0) return true; // No keys configured = open access
+
+  const providedHash = createHash('sha256').update(providedKey).digest();
+  for (const key of keys) {
+    const keyHash = createHash('sha256').update(key).digest();
+    if (timingSafeEqual(providedHash, keyHash)) return true;
+  }
+  return false;
 }
 
 export function validateTelegramUser(telegramId: number): boolean {
