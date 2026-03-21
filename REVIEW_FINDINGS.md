@@ -8,13 +8,14 @@
 
 ## Summary
 
-| Severity | Count | Actionable |
-|----------|-------|-----------|
+| Severity | Count | Fixed |
+|----------|-------|-------|
 | HIGH | 3 | 3 |
 | MEDIUM | 5 | 5 |
 | LOW | 4 | 4 |
 | INFO | 2 | 0 |
-| **Total** | **14** | **12** |
+| Quality (from Codex scan) | 3 | 3 |
+| **Total** | **17** | **15** |
 
 ---
 
@@ -167,6 +168,11 @@
 - SEC-010: Redact sensitive data in logs
 - QA-001: Add logging to silent catch blocks
 - QA-002: Dynamic version from package.json
+
+### Phase 5e: Additional Quality (from Codex quality scan)
+- QA-007: Validate frontmatter fields before writing (no blind `as NoteMetadata` cast)
+- QA-008: Add logging to silent catch blocks in index.ts and registry.ts
+- QA-009: Add global `app.onError` boundary for consistent JSON error responses
 
 ### Phase 5d: Documentation
 - SEC-001: Document shared identity limitation
