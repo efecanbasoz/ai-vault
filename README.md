@@ -2,16 +2,33 @@
 
 **AI-powered knowledge vault with multi-LLM support.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.0-2ea043)](package.json)
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://typescriptlang.org)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen?style=flat-square)](https://nodejs.org)
+[![Version](https://img.shields.io/badge/version-1.5.0-2ea043?style=flat-square)](package.json)
 
 AI Vault combines a **Telegram bot**, **REST API**, and **CLI REPL** with a Markdown-based knowledge vault. Switch between LLM providers on the fly, save conversations as structured notes, search your vault, and get automatic weekly digests.
 
 ```
 Telegram / REST API / CLI  -->  Engine  -->  LLM Providers  -->  Markdown Vault
 ```
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Providers](#providers)
+- [REST API](#rest-api)
+- [Vault Structure](#vault-structure)
+- [Architecture](#architecture)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
 
 ## Features
 
@@ -22,6 +39,8 @@ Telegram / REST API / CLI  -->  Engine  -->  LLM Providers  -->  Markdown Vault
 - **Auto-Synthesis**: Weekly digest generation that finds themes and forgotten ideas
 - **Multi-User**: Isolated vaults per user with single-user mode option
 - **Minimal Dependencies**: 8 runtime deps, ~2,900 LOC
+
+---
 
 ## Quick Start
 
@@ -47,7 +66,7 @@ cd docker
 docker compose up
 ```
 
-## Development
+### Development
 
 ```bash
 npm run dev        # Run all enabled interfaces
@@ -56,12 +75,7 @@ npm run typecheck  # Type validation
 npm run build      # Compile TypeScript
 ```
 
-## Security Defaults
-
-- API access is blocked unless `API_KEY` is set or `API_ALLOW_ANONYMOUS=true`
-- Telegram access is blocked unless `TELEGRAM_ALLOWED_USERS` is configured or `TELEGRAM_ALLOW_PUBLIC=true`
-- Vault note paths are constrained to `brainstorm|active|archive` and `.md` filenames
-- API enforces request body size limits and in-memory identity-based rate limiting
+---
 
 ## Configuration
 
@@ -81,6 +95,8 @@ See [`.env.example`](.env.example) for all options. Key settings:
 | `CLI_ENABLED` | Enable CLI REPL | `true` |
 | `SINGLE_USER_MODE` | Skip auth, use root vault | `false` |
 
+---
+
 ## Providers
 
 | ID | Type | Requires |
@@ -98,7 +114,7 @@ See [`.env.example`](.env.example) for all options. Key settings:
 [OpenRouter](https://openrouter.ai) gives you access to 100+ models (Claude, GPT, Gemini, Llama, Mistral, DeepSeek, etc.) through a single API key. Set the model via `OPENROUTER_MODEL`:
 
 ```env
-OPENROUTER_API_KEY=sk-or-...
+OPENROUTER_API_KEY=***
 OPENROUTER_MODEL=anthropic/claude-sonnet-4    # default
 # OPENROUTER_MODEL=openai/gpt-4o
 # OPENROUTER_MODEL=google/gemini-2.0-flash-001
@@ -112,6 +128,8 @@ Browse all available models at [openrouter.ai/models](https://openrouter.ai/mode
 - Telegram: `/provider openrouter-api`
 - CLI: `/provider claude-api`
 - API: `PUT /api/v1/provider {"provider": "openai-api"}`
+
+---
 
 ## REST API
 
@@ -138,16 +156,18 @@ GET    /api/v1/status                   System status
 ```bash
 # Chat
 curl -X POST http://localhost:3000/api/v1/chat \
-  -H "Authorization: Bearer your-key" \
+  -H "Authorization: Bearer <API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"message": "What is the meaning of life?"}'
 
 # Search vault
 curl -X POST http://localhost:3000/api/v1/vault/search \
-  -H "Authorization: Bearer your-key" \
+  -H "Authorization: Bearer <API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"query": "machine learning"}'
 ```
+
+---
 
 ## Vault Structure
 
@@ -174,6 +194,8 @@ updated: 2025-01-15T10:30:00.000Z
 Content here...
 ```
 
+---
+
 ## Architecture
 
 ```
@@ -188,12 +210,37 @@ src/
 
 All interfaces convert input to a `Prompt` object and call `engine.execute(prompt)`. The engine resolves the provider, manages sessions, and returns a `PromptResult`.
 
+---
+
+## Security
+
+- API access is blocked unless `API_KEY` is set or `API_ALLOW_ANONYMOUS=true`
+- Telegram access is blocked unless `TELEGRAM_ALLOWED_USERS` is configured or `TELEGRAM_ALLOW_PUBLIC=true`
+- Vault note paths are constrained to `brainstorm|active|archive` and `.md` filenames
+- API enforces request body size limits and in-memory identity-based rate limiting
+
+---
+
+## Contributing
+
+Contributions are welcome! Please open an issue first to discuss what you'd like to change.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Run `npm run typecheck` to verify
+4. Commit your changes
+5. Push to the branch and open a Pull Request
+
+---
+
 ## Contributors
 
 - [Claude](https://github.com/claude)
 - [efecanbasoz](https://github.com/efecanbasoz)
 - [Codex](https://github.com/codex)
 
+---
+
 ## License
 
-MIT
+[Apache-2.0](./LICENSE)
