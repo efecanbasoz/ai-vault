@@ -13,7 +13,7 @@ export function formatForTelegram(text: string): string {
       if (!inCodeBlock) {
         inCodeBlock = true;
         codeLanguage = trimmed.slice(3).trim();
-        result.push(codeLanguage ? `<pre><code class="language-${escapeHtml(codeLanguage)}">` : '<pre><code>');
+        result.push(codeLanguage ? `<pre><code class="language-${escapeHtmlAttribute(codeLanguage)}">` : '<pre><code>');
       } else {
         inCodeBlock = false;
         codeLanguage = '';
@@ -104,4 +104,10 @@ function escapeHtml(text: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function escapeHtmlAttribute(text: string): string {
+  return escapeHtml(text)
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
